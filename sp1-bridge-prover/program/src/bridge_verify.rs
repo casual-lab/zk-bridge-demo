@@ -1,15 +1,12 @@
 //! Guest program for verifying Solana bridge orders
 //! This program verifies that a transfer order exists and is in the correct state
 
-#![no_main]
-sp1_zkvm::entrypoint!(main);
-
 use alloy_sol_types::SolType;
 use fibonacci_lib::bridge::{
     BridgeProofPublicValues, MerkleProof, OrderStatus, TransferOrder, hash_order,
 };
 
-pub fn main() {
+pub fn verify_bridge_order() {
     // 1. 读取输入：订单数据
     let order: TransferOrder = sp1_zkvm::io::read();
     

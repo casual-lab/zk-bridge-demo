@@ -4,3 +4,5 @@ node_modules
 .yarn
 .anchor
 .DS_Store
+docs/zkbridge_extracted.txt
+zkbridge_paper.pdf
