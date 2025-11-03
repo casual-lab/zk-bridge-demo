@@ -133,7 +133,7 @@ pub struct ExecuteMessage<'info> {
 pub struct BridgeState {
     pub admin: Pubkey,
     
-    #[max_len(100)]
+    #[max_len(20)]  // 减少到 20 个区块
     pub eth_headers: Vec<EthBlockHeader>,
     
     pub last_eth_block: u64,
