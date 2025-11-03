@@ -1,5 +1,7 @@
 {
-  "network": "localhost",
-  "solanaUpdater": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-  "deployedAt": "2025-11-03T03:38:52.844Z"
+  "network": "hardhat",
+  "mockSP1Verifier": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+  "solanaUpdater": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+  "deployedAt": "2025-11-03T05:54:53.980Z",
+  "note": "Using MockSP1Verifier for development. Replace with real SP1 verifier in production."
 }

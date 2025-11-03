@@ -4,15 +4,21 @@ const { ethers } = hre;
 
 describe("SolanaUpdater", function () {
   let solanaUpdater;
+  let mockVerifier;
   let owner;
   let otherAccount;
 
   beforeEach(async function () {
     [owner, otherAccount] = await ethers.getSigners();
     
+    // 部署 MockSP1Verifier (strictMode = false for easier testing)
+    const MockSP1Verifier = await ethers.getContractFactory("MockSP1Verifier");
+    mockVerifier = await MockSP1Verifier.deploy(false);
+    
+    // 部署 SolanaUpdater 并传入 verifier 地址
     const SolanaUpdater = await ethers.getContractFactory("SolanaUpdater");
     solanaUpdater = await SolanaUpdater.deploy(
-      ethers.ZeroAddress // SP1 Verifier 占位
+      await mockVerifier.getAddress()
     );
   });
 
@@ -22,7 +28,7 @@ describe("SolanaUpdater", function () {
     });
 
     it("应该正确设置 sp1Verifier", async function () {
-      expect(await solanaUpdater.sp1Verifier()).to.equal(ethers.ZeroAddress);
+      expect(await solanaUpdater.sp1Verifier()).to.equal(await mockVerifier.getAddress());
     });
 
     it("初始 currentSlot 应该为 0", async function () {
@@ -41,9 +47,11 @@ describe("SolanaUpdater", function () {
         confirmations: 32
       };
       
-      const proof = "0x"; // 空证明（测试时跳过验证）
+      const programVKey = ethers.randomBytes(32);
+      const publicValues = ethers.hexlify(ethers.randomBytes(64)); // 模拟公开输入
+      const proof = ethers.hexlify(ethers.randomBytes(256)); // 模拟证明
       
-      await expect(solanaUpdater.updateSolanaBlock(proof, header))
+      await expect(solanaUpdater.updateSolanaBlock(programVKey, publicValues, proof, header))
         .to.emit(solanaUpdater, "SolanaBlockUpdated")
         .withArgs(header.slot, header.blockhash, header.blockHeight);
       
@@ -60,8 +68,12 @@ describe("SolanaUpdater", function () {
         confirmations: 10 // 不足 32
       };
       
+      const programVKey = ethers.randomBytes(32);
+      const publicValues = ethers.hexlify(ethers.randomBytes(64));
+      const proof = ethers.hexlify(ethers.randomBytes(256));
+      
       await expect(
-        solanaUpdater.updateSolanaBlock("0x", header)
+        solanaUpdater.updateSolanaBlock(programVKey, publicValues, proof, header)
       ).to.be.revertedWith("Insufficient confirmations");
     });
 
@@ -76,7 +88,11 @@ describe("SolanaUpdater", function () {
         confirmations: 32
       };
       
-      await solanaUpdater.updateSolanaBlock("0x", header1);
+      const programVKey = ethers.randomBytes(32);
+      const publicValues = ethers.hexlify(ethers.randomBytes(64));
+      const proof = ethers.hexlify(ethers.randomBytes(256));
+      
+      await solanaUpdater.updateSolanaBlock(programVKey, publicValues, proof, header1);
       
       // 尝试添加 parentHash 不匹配的区块
       const header2 = {
@@ -89,7 +105,7 @@ describe("SolanaUpdater", function () {
       };
       
       await expect(
-        solanaUpdater.updateSolanaBlock("0x", header2)
+        solanaUpdater.updateSolanaBlock(programVKey, publicValues, proof, header2)
       ).to.be.revertedWith("Parent hash mismatch");
     });
 
@@ -103,7 +119,11 @@ describe("SolanaUpdater", function () {
         confirmations: 32
       };
       
-      await solanaUpdater.updateSolanaBlock("0x", header1);
+      const programVKey = ethers.randomBytes(32);
+      const publicValues = ethers.hexlify(ethers.randomBytes(64));
+      const proof = ethers.hexlify(ethers.randomBytes(256));
+      
+      await solanaUpdater.updateSolanaBlock(programVKey, publicValues, proof, header1);
       
       // 尝试添加 slot 相同的区块
       const header2 = {
@@ -116,7 +136,7 @@ describe("SolanaUpdater", function () {
       };
       
       await expect(
-        solanaUpdater.updateSolanaBlock("0x", header2)
+        solanaUpdater.updateSolanaBlock(programVKey, publicValues, proof, header2)
       ).to.be.revertedWith("Slot must be greater than current");
     });
 
@@ -131,7 +151,11 @@ describe("SolanaUpdater", function () {
         confirmations: 32
       };
       
-      await solanaUpdater.updateSolanaBlock("0x", header1);
+      const programVKey = ethers.randomBytes(32);
+      const publicValues = ethers.hexlify(ethers.randomBytes(64));
+      const proof = ethers.hexlify(ethers.randomBytes(256));
+      
+      await solanaUpdater.updateSolanaBlock(programVKey, publicValues, proof, header1);
       expect(await solanaUpdater.currentSlot()).to.equal(1000);
       
       // 区块 2
@@ -144,7 +168,7 @@ describe("SolanaUpdater", function () {
         confirmations: 32
       };
       
-      await solanaUpdater.updateSolanaBlock("0x", header2);
+      await solanaUpdater.updateSolanaBlock(programVKey, publicValues, proof, header2);
       expect(await solanaUpdater.currentSlot()).to.equal(1001);
       
       // 区块 3
@@ -157,7 +181,7 @@ describe("SolanaUpdater", function () {
         confirmations: 32
       };
       
-      await solanaUpdater.updateSolanaBlock("0x", header3);
+      await solanaUpdater.updateSolanaBlock(programVKey, publicValues, proof, header3);
       expect(await solanaUpdater.currentSlot()).to.equal(1002);
     });
   });
@@ -173,7 +197,11 @@ describe("SolanaUpdater", function () {
         confirmations: 32
       };
       
-      await solanaUpdater.updateSolanaBlock("0x", header);
+      const programVKey = ethers.randomBytes(32);
+      const publicValues = ethers.hexlify(ethers.randomBytes(64));
+      const proof = ethers.hexlify(ethers.randomBytes(256));
+      
+      await solanaUpdater.updateSolanaBlock(programVKey, publicValues, proof, header);
       
       const stored = await solanaUpdater.getSolanaBlock(1000);
       
@@ -217,10 +245,11 @@ describe("SolanaUpdater", function () {
         });
       }
       
-      // 为每个区块生成空证明
-      const proofs = headers.map(() => "0x");
+      const programVKey = ethers.randomBytes(32);
+      const publicValuesList = headers.map(() => ethers.hexlify(ethers.randomBytes(64)));
+      const proofs = headers.map(() => ethers.hexlify(ethers.randomBytes(256)));
       
-      await solanaUpdater.updateBatchSolanaBlocks(proofs, headers);
+      await solanaUpdater.updateBatchSolanaBlocks(programVKey, publicValuesList, proofs, headers);
       
       expect(await solanaUpdater.currentSlot()).to.equal(1004);
       

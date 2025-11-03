@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import "./ISP1Verifier.sol";
+
 /**
  * @title SolanaUpdater
  * @notice 接收并验证 Solana 区块头，通过 SP1 zkVM 证明
@@ -72,10 +74,14 @@ contract SolanaUpdater {
     
     /**
      * @notice 更新 Solana 区块头
+     * @param programVKey SP1 程序的验证密钥
+     * @param publicValues 公开输入（编码的区块头数据）
      * @param proof SP1 Groth16 证明
      * @param header Solana 区块头数据
      */
     function updateSolanaBlock(
+        bytes32 programVKey,
+        bytes calldata publicValues,
         bytes calldata proof,
         SolanaBlockHeader calldata header
     ) public {
@@ -98,15 +104,12 @@ contract SolanaUpdater {
             );
         }
         
-        // 3. 验证 SP1 证明
-        // 注意：这里简化了，实际应该调用 SP1 Verifier 合约
-        // require(
-        //     ISP1Verifier(sp1Verifier).verify(proof, header),
-        //     "Invalid proof"
-        // );
-        
-        // 暂时跳过证明验证（用于本地测试）
-        // 生产环境必须启用！
+        // 3. 验证 SP1 zkVM 证明
+        ISP1Verifier(sp1Verifier).verifyProof(
+            programVKey,
+            publicValues,
+            proof
+        );
         
         // 4. 存储区块头
         solanaHeaders[header.slot] = header;
@@ -119,13 +122,16 @@ contract SolanaUpdater {
      * @notice 批量更新多个区块（用于快速同步）
      */
     function updateBatchSolanaBlocks(
+        bytes32 programVKey,
+        bytes[] calldata publicValues,
         bytes[] calldata proofs,
         SolanaBlockHeader[] calldata headers
     ) external {
         require(proofs.length == headers.length, "Length mismatch");
+        require(publicValues.length == headers.length, "Public values length mismatch");
         
         for (uint256 i = 0; i < headers.length; i++) {
-            updateSolanaBlock(proofs[i], headers[i]);
+            updateSolanaBlock(programVKey, publicValues[i], proofs[i], headers[i]);
         }
     }
     
