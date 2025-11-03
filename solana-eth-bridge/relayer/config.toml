@@ -1,0 +1,16 @@
+# Solana-Ethereum Bridge Relayer 配置
+
+[solana]
+rpc_url = "http://localhost:8899"
+min_confirmations = 32
+poll_interval_ms = 400
+
+[ethereum]
+rpc_url = "http://localhost:8545"
+min_confirmations = 12
+poll_interval_ms = 12000
+contract_address = "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+
+[sp1]
+enable_groth16 = true
+prove_timeout_secs = 300
