@@ -78,7 +78,7 @@ contract SolanaUpdater {
     function updateSolanaBlock(
         bytes calldata proof,
         SolanaBlockHeader calldata header
-    ) external {
+    ) public {
         // 1. 验证确认深度（防止分叉）
         require(
             header.confirmations >= 32,
@@ -118,7 +118,7 @@ contract SolanaUpdater {
     /**
      * @notice 批量更新多个区块（用于快速同步）
      */
-    function updateSolanaBlockBatch(
+    function updateBatchSolanaBlocks(
         bytes[] calldata proofs,
         SolanaBlockHeader[] calldata headers
     ) external {

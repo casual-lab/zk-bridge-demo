@@ -1,0 +1,41 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "/workspace/solana-eth-bridge/ethereum/contracts/SolanaUpdater.sol": {
+      "lastModificationDate": 1762138717743,
+      "contentHash": "5f87d1e7e9d54e0aee00a2f99829caa2",
+      "sourceName": "contracts/SolanaUpdater.sol",
+      "solcConfig": {
+        "version": "0.8.24",
+        "settings": {
+          "evmVersion": "paris",
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.24"
+      ],
+      "artifacts": [
+        "SolanaUpdater"
+      ]
+    }
+  }
+}

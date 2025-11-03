@@ -1,4 +1,5 @@
-const hre = require("hardhat");
+import hre from "hardhat";
+import fs from "fs";
 
 async function main() {
   console.log("Deploying SolanaUpdater contract...");
@@ -15,7 +16,6 @@ async function main() {
   console.log(`✓ SolanaUpdater deployed to: ${address}`);
   
   // 保存地址到文件
-  const fs = require('fs');
   const deploymentInfo = {
     network: hre.network.name,
     solanaUpdater: address,
