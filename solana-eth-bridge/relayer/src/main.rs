@@ -4,6 +4,7 @@
 
 mod solana_monitor;
 mod ethereum_monitor;
+mod prover;
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
@@ -13,6 +14,7 @@ use tracing::{info, warn, error};
 
 use solana_monitor::SolanaMonitor;
 use ethereum_monitor::EthereumMonitor;
+use prover::Sp1Prover;
 
 // ========================================
 // 配置
@@ -55,58 +57,30 @@ impl Config {
 }
 
 // ========================================
-// SP1 证明生成器
-// ========================================
-
-pub struct Sp1Prover {
-    #[allow(dead_code)]
-    config: Sp1Config,
-    // TODO: Sprint 6 添加 SP1 ProverClient
-    // client: ProverClient,
-}
-
-impl Sp1Prover {
-    pub fn new(config: Sp1Config) -> Self {
-        info!("Initializing SP1 prover");
-        Self { config }
-    }
-
-    pub async fn prove_solana_block(&self, _block_data: &[u8]) -> Result<Vec<u8>> {
-        // TODO: Sprint 6 实现 SP1 证明生成
-        // 1. 准备输入数据
-        // 2. 调用 SP1 SDK
-        // 3. 生成 STARK 证明
-        // 4. 压缩为 Groth16（如果启用）
-        
-        info!("Generating proof for Solana block... (mock)");
-        Ok(vec![])
-    }
-
-    pub async fn prove_eth_block(&self, _block_data: &[u8]) -> Result<Vec<u8>> {
-        // TODO: Sprint 6 实现 SP1 证明生成
-        
-        info!("Generating proof for Ethereum block... (mock)");
-        Ok(vec![])
-    }
-}
-
-// ========================================
 // Relayer 主服务
 // ========================================
 
 pub struct Relayer {
     solana_monitor: Arc<SolanaMonitor>,
     ethereum_monitor: Arc<EthereumMonitor>,
-    #[allow(dead_code)]
-    sp1_prover: Arc<Sp1Prover>,
 }
 
 impl Relayer {
     pub fn new(config: Config) -> Self {
+        info!("Initializing Relayer...");
+        
+        // 创建 SP1 Prover (共享)
+        let prover = Arc::new(Sp1Prover::new());
+        
+        // 创建监控器
+        let solana_monitor = Arc::new(SolanaMonitor::new(config.solana, prover.clone()));
+        let ethereum_monitor = Arc::new(EthereumMonitor::new(config.ethereum, prover));
+        
+        info!("✅ Relayer initialized");
+        
         Self {
-            solana_monitor: Arc::new(SolanaMonitor::new(config.solana)),
-            ethereum_monitor: Arc::new(EthereumMonitor::new(config.ethereum)),
-            sp1_prover: Arc::new(Sp1Prover::new(config.sp1)),
+            solana_monitor,
+            ethereum_monitor,
         }
     }
 
