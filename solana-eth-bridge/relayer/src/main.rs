@@ -2,32 +2,37 @@
 //! 
 //! 监控两条链的区块，生成 SP1 证明，并提交到对应链
 
+mod solana_monitor;
+mod ethereum_monitor;
+
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::sync::Arc;
-use tokio::time::{sleep, Duration};
 use tracing::{info, warn, error};
+
+use solana_monitor::SolanaMonitor;
+use ethereum_monitor::EthereumMonitor;
 
 // ========================================
 // 配置
 // ========================================
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Config {
     pub solana: SolanaConfig,
     pub ethereum: EthereumConfig,
     pub sp1: Sp1Config,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct SolanaConfig {
     pub rpc_url: String,
     pub min_confirmations: u32,
     pub poll_interval_ms: u64,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct EthereumConfig {
     pub rpc_url: String,
     pub min_confirmations: u64,
@@ -35,7 +40,7 @@ pub struct EthereumConfig {
     pub contract_address: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Sp1Config {
     pub enable_groth16: bool,
     pub prove_timeout_secs: u64,
@@ -50,100 +55,13 @@ impl Config {
 }
 
 // ========================================
-// Solana 监控器
-// ========================================
-
-pub struct SolanaMonitor {
-    config: SolanaConfig,
-    // TODO: Phase 2 添加 solana_client
-    // solana_client: RpcClient,
-}
-
-impl SolanaMonitor {
-    pub fn new(config: SolanaConfig) -> Self {
-        info!("Initializing Solana monitor: {}", config.rpc_url);
-        Self { config }
-    }
-
-    pub async fn start(&self) -> Result<()> {
-        info!("Starting Solana monitor...");
-        
-        loop {
-            match self.check_new_blocks().await {
-                Ok(_) => {}
-                Err(e) => {
-                    error!("Solana monitor error: {:?}", e);
-                }
-            }
-            
-            sleep(Duration::from_millis(self.config.poll_interval_ms)).await;
-        }
-    }
-
-    async fn check_new_blocks(&self) -> Result<()> {
-        // TODO: Phase 2 实现区块监控逻辑
-        // 1. 获取最新 slot
-        // 2. 等待确认
-        // 3. 获取区块数据和签名
-        // 4. 触发证明生成
-        
-        // 临时：每隔一段时间打印日志
-        info!("Checking Solana blocks... (mock)");
-        Ok(())
-    }
-}
-
-// ========================================
-// Ethereum 监控器
-// ========================================
-
-pub struct EthereumMonitor {
-    config: EthereumConfig,
-    // TODO: Phase 2 添加 ethereum provider
-    // provider: Provider<Http>,
-}
-
-impl EthereumMonitor {
-    pub fn new(config: EthereumConfig) -> Self {
-        info!("Initializing Ethereum monitor: {}", config.rpc_url);
-        Self { config }
-    }
-
-    pub async fn start(&self) -> Result<()> {
-        info!("Starting Ethereum monitor...");
-        
-        loop {
-            match self.check_new_blocks().await {
-                Ok(_) => {}
-                Err(e) => {
-                    error!("Ethereum monitor error: {:?}", e);
-                }
-            }
-            
-            sleep(Duration::from_millis(self.config.poll_interval_ms)).await;
-        }
-    }
-
-    async fn check_new_blocks(&self) -> Result<()> {
-        // TODO: Phase 2 实现区块监控逻辑
-        // 1. 获取最新区块号
-        // 2. 等待确认
-        // 3. 获取区块头数据
-        // 4. 触发证明生成
-        
-        // 临时：每隔一段时间打印日志
-        info!("Checking Ethereum blocks... (mock)");
-        Ok(())
-    }
-}
-
-// ========================================
 // SP1 证明生成器
 // ========================================
 
 pub struct Sp1Prover {
+    #[allow(dead_code)]
     config: Sp1Config,
-    // TODO: Phase 2 添加 SP1 ProverClient
+    // TODO: Sprint 6 添加 SP1 ProverClient
     // client: ProverClient,
 }
 
@@ -154,7 +72,7 @@ impl Sp1Prover {
     }
 
     pub async fn prove_solana_block(&self, _block_data: &[u8]) -> Result<Vec<u8>> {
-        // TODO: Phase 2 实现 SP1 证明生成
+        // TODO: Sprint 6 实现 SP1 证明生成
         // 1. 准备输入数据
         // 2. 调用 SP1 SDK
         // 3. 生成 STARK 证明
@@ -165,7 +83,7 @@ impl Sp1Prover {
     }
 
     pub async fn prove_eth_block(&self, _block_data: &[u8]) -> Result<Vec<u8>> {
-        // TODO: Phase 2 实现 SP1 证明生成
+        // TODO: Sprint 6 实现 SP1 证明生成
         
         info!("Generating proof for Ethereum block... (mock)");
         Ok(vec![])
@@ -179,6 +97,7 @@ impl Sp1Prover {
 pub struct Relayer {
     solana_monitor: Arc<SolanaMonitor>,
     ethereum_monitor: Arc<EthereumMonitor>,
+    #[allow(dead_code)]
     sp1_prover: Arc<Sp1Prover>,
 }
 

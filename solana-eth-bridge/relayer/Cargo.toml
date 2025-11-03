@@ -7,12 +7,12 @@ edition = "2021"
 # 异步运行时
 tokio = { version = "1.40", features = ["full"] }
 
-# Solana 客户端（暂时注释，避免版本冲突）
-# solana-client = "1.18"
-# solana-sdk = "1.18"
+# Solana 客户端
+solana-client = "1.18"
+solana-sdk = "1.18"
 
-# Ethereum 客户端（暂时注释，避免版本冲突）
-# ethers = "2.0"
+# HTTP 客户端（用于 Ethereum JSON-RPC）
+reqwest = { version = "0.12", features = ["json"] }
 
 # SP1 证明生成（暂时注释，Phase 2 再启用）
 # sp1-sdk = "1.0"

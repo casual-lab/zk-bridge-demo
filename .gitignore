@@ -4,3 +4,4 @@ virgo_paper.txt
 Transparent_Polynomial_Delegation_and_Its_Applications_to_Zero_Knowledge_Proof.pdf
 **/node_modules/
 **/target/
+**/test-ledger
